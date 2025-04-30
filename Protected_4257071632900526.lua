@@ -27,7 +27,7 @@ Title.AnchorPoint = Vector2.new(0.5, 0)
 
 -- Bilgilendirme yazısı
 local waitingLabel = Instance.new("TextLabel")
-waitingLabel.Text = "Lütfen Bekleyiniz..."
+waitingLabel.Text = "Farmı Döngü Halinde Kullanmak İçin Discord Gelin."
 waitingLabel.Font = Enum.Font.Gotham
 waitingLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 waitingLabel.TextSize = 12
