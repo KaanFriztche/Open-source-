@@ -1,0 +1,130 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+-- Create ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "WalkSpeedChangerGUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = game:GetService("CoreGui")
+
+-- Main frame (küçültülmüş)
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 140, 0, 56) -- Orijinal 200x80, burda %70 küçülttüm
+mainFrame.Position = UDim2.new(1, -150, 0, 10) -- Sağ üst, 10 px aşağı, 150 px solda
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.BorderSizePixel = 0
+mainFrame.AnchorPoint = Vector2.new(0, 0)
+mainFrame.Parent = screenGui
+
+local uICorner = Instance.new("UICorner")
+uICorner.CornerRadius = UDim.new(0, 10)
+uICorner.Parent = mainFrame
+
+-- Speed display label
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Size = UDim2.new(0, 40, 0, 40)
+speedLabel.Position = UDim2.new(0.5, -20, 0.5, -20)
+speedLabel.BackgroundTransparency = 1
+speedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedLabel.Font = Enum.Font.GothamBold
+speedLabel.TextSize = 24
+speedLabel.Text = tostring(humanoid.WalkSpeed)
+speedLabel.Parent = mainFrame
+
+-- "-" button
+local minusBtn = Instance.new("TextButton")
+minusBtn.Size = UDim2.new(0, 40, 0, 40)
+minusBtn.Position = UDim2.new(0, 5, 0.5, -20)
+minusBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+minusBtn.Text = "-"
+minusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+minusBtn.Font = Enum.Font.GothamBold
+minusBtn.TextSize = 28
+minusBtn.BorderSizePixel = 0
+minusBtn.Parent = mainFrame
+
+local minusCorner = Instance.new("UICorner")
+minusCorner.CornerRadius = UDim.new(0, 8)
+minusCorner.Parent = minusBtn
+
+-- "+" button
+local plusBtn = Instance.new("TextButton")
+plusBtn.Size = UDim2.new(0, 40, 0, 40)
+plusBtn.Position = UDim2.new(1, -45, 0.5, -20)
+plusBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+plusBtn.Text = "+"
+plusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+plusBtn.Font = Enum.Font.GothamBold
+plusBtn.TextSize = 28
+plusBtn.BorderSizePixel = 0
+plusBtn.Parent = mainFrame
+
+local plusCorner = Instance.new("UICorner")
+plusCorner.CornerRadius = UDim.new(0, 8)
+plusCorner.Parent = plusBtn
+
+-- Functions to update speed
+local function updateSpeed(newSpeed)
+    newSpeed = math.clamp(newSpeed, 1, 500)
+    humanoid.WalkSpeed = newSpeed
+    speedLabel.Text = tostring(newSpeed)
+end
+
+minusBtn.MouseButton1Click:Connect(function()
+    updateSpeed(humanoid.WalkSpeed - 10)
+end)
+
+plusBtn.MouseButton1Click:Connect(function()
+    updateSpeed(humanoid.WalkSpeed + 10)
+end)
+
+-- Update humanoid if character respawns
+player.CharacterAdded:Connect(function(char)
+    character = char
+    humanoid = character:WaitForChild("Humanoid")
+    speedLabel.Text = tostring(humanoid.WalkSpeed)
+end)
+
+-- Dragging functionality for mainFrame
+local dragging = false
+local dragInput
+local dragStart
+local startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    mainFrame.Position = UDim2.new(
+        math.clamp(startPos.X.Scale, 0, 1),
+        math.clamp(startPos.X.Offset + delta.X, 0, workspace.CurrentCamera.ViewportSize.X - mainFrame.AbsoluteSize.X),
+        math.clamp(startPos.Y.Scale, 0, 1),
+        math.clamp(startPos.Y.Offset + delta.Y, 0, workspace.CurrentCamera.ViewportSize.Y - mainFrame.AbsoluteSize.Y)
+    )
+end
+
+mainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+mainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if dragging and input == dragInput then
+        update(input)
+    end
+end)
